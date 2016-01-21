@@ -15,7 +15,7 @@
 
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-  var _get = function get(_x3, _x4, _x5) { var _again = true; _function: while (_again) { var object = _x3, property = _x4, receiver = _x5; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x3 = parent; _x4 = property; _x5 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+  var _get = function get(_x3, _x4, _x5) { var _again = true; _function: while (_again) { var object = _x3, property = _x4, receiver = _x5; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x3 = parent; _x4 = property; _x5 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -138,7 +138,6 @@
       value: function componentDidMount() {
         this.updateFrame = this.updateFrame.bind(this);
         window.addEventListener('resize', this.updateFrame);
-        this.updateFrame(this.scrollTo.bind(this, this.props.initialIndex));
       }
     }, {
       key: 'shouldComponentUpdate',
@@ -282,10 +281,12 @@
       value: function updateSimpleFrame(cb) {
         var _getStartAndEnd = this.getStartAndEnd();
 
+        var start = _getStartAndEnd.start;
         var end = _getStartAndEnd.end;
 
         var itemEls = findDOMNode(this.items).children;
         var elEnd = 0;
+        var elBegin = 0;
 
         if (itemEls.length) {
           var axis = this.props.axis;
@@ -293,9 +294,14 @@
           var firstItemEl = itemEls[0];
           var lastItemEl = itemEls[itemEls.length - 1];
           elEnd = this.getOffset(lastItemEl) + lastItemEl[OFFSET_SIZE_KEYS[axis]] - this.getOffset(firstItemEl);
+          elBegin = this.getOffset(firstItemEl);
         }
 
-        if (elEnd > end) return cb();
+        if (elBegin < start) {
+          return cb();
+        }
+
+        this.setScroll(this.scrollParent.scrollHeight - this.getScroll());
 
         var _props3 = this.props;
         var pageSize = _props3.pageSize;
@@ -503,7 +509,7 @@
         var size = _state5.size;
 
         var items = [];
-        for (var i = 0; i < size; ++i) {
+        for (var i = size - 1; i >= 0; --i) {
           items.push(itemRenderer(from + i, i));
         }return itemsRenderer(items, function (c) {
           return _this.items = c;
