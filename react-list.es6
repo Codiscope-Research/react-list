@@ -73,7 +73,6 @@ export default class extends Component {
   componentDidMount() {
     this.updateFrame = this.updateFrame.bind(this);
     window.addEventListener('resize', this.updateFrame);
-    this.updateFrame(this.scrollTo.bind(this, this.props.initialIndex));
   }
 
   shouldComponentUpdate(props, state) {
@@ -195,9 +194,10 @@ export default class extends Component {
   }
 
   updateSimpleFrame(cb) {
-    const {end} = this.getStartAndEnd();
+    const {start, end} = this.getStartAndEnd();
     const itemEls = findDOMNode(this.items).children;
     let elEnd = 0;
+    let elBegin = 0;
 
     if (itemEls.length) {
       const {axis} = this.props;
@@ -205,9 +205,12 @@ export default class extends Component {
       const lastItemEl = itemEls[itemEls.length - 1];
       elEnd = this.getOffset(lastItemEl) + lastItemEl[OFFSET_SIZE_KEYS[axis]] -
         this.getOffset(firstItemEl);
+      elBegin = this.getOffset(firstItemEl);
     }
 
-    if (elEnd > end) return cb();
+    if (elBegin < start) { return cb(); }
+
+    this.setScroll(this.scrollParent.scrollHeight - this.getScroll());
 
     const {pageSize, length} = this.props;
     this.setState({size: Math.min(this.state.size + pageSize, length)}, cb);
@@ -370,7 +373,7 @@ export default class extends Component {
     const {itemRenderer, itemsRenderer} = this.props;
     const {from, size} = this.state;
     const items = [];
-    for (let i = 0; i < size; ++i) items.push(itemRenderer(from + i, i));
+    for (let i = size - 1; i >= 0; --i) items.push(itemRenderer(from + i, i));
     return itemsRenderer(items, c => this.items = c);
   }
 
